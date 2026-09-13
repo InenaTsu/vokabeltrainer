@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Vokabeltrainer</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#FFC93C">
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="kopf">
+    <button class="marke" id="zur-uebersicht" type="button">
+      <span class="marke-biene" id="kopf-biene"></span>
+      <span class="marke-text">Vokabeltrainer</span>
+    </button>
+    <nav class="nav" id="nav"></nav>
+  </header>
+
+  <div class="meldung-platz" id="meldung"></div>
+
+  <main id="app" class="inhalt"></main>
+
+  <script type="module" src="js/main.js"></script>
+
+  <!-- Offline-Speicher (nur ueber einen Webserver). Meldet sw.js an, damit der Trainer
+       vom Startbildschirm des Handys aus auch ohne Netz startet. navigator.serviceWorker
+       gibt es nur ueber https (und localhost) - beim Doppelklick auf die Datei passiert
+       hier nichts, die App laeuft unveraendert weiter. -->
+  <script>
+    if (navigator.serviceWorker &&
+        (location.protocol === 'https:' || location.protocol === 'http:')) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  </script>
+</body>
+</html>

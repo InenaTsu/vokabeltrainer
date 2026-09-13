@@ -1,0 +1,446 @@
+/* ---------- Design-Tokens ---------- */
+:root {
+  --honig:       #FFC93C;
+  --honig-dunkel:#F2A71B;
+  --honig-hell:  #FFF1C9;
+  --creme:       #FFF8E7;
+  --karte:       #FFFFFF;
+  --tinte:       #3B2F2F;
+  --tinte-leise: #8A7B72;
+  --rand:        #EADFC8;
+  --gruen:       #3FA34D;
+  --gruen-hell:  #E4F5E6;
+  --rot:         #E4572E;
+  --rot-hell:    #FDE8E2;
+  --blau:        #3D7EA6;
+  --blau-hell:   #E4F0F7;
+
+  --radius:      18px;
+  --radius-klein:12px;
+  --schatten:    0 2px 0 var(--rand), 0 8px 20px rgba(59,47,47,.08);
+  --schrift:     "Segoe UI", Nunito, system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--creme);
+  color: var(--tinte);
+  font-family: var(--schrift);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* ---------- Kopfzeile ---------- */
+.kopf {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: var(--honig);
+  border-bottom: 3px solid var(--honig-dunkel);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.marke {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--tinte);
+}
+.marke-biene { display: block; width: 40px; height: 40px; }
+.marke-biene svg { width: 100%; height: 100%; display: block; }
+.marke-text { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+
+.nav { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.nav button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,.55);
+  color: var(--tinte);
+  cursor: pointer;
+}
+.nav button:hover { background: #fff; }
+.nav button.aktiv { background: var(--tinte); color: var(--honig); }
+
+/* ---------- Grundbausteine ---------- */
+.inhalt { max-width: 900px; margin: 0 auto; padding: 24px 20px 80px; }
+
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 21px; margin: 28px 0 10px; }
+.unterzeile { color: var(--tinte-leise); margin: 0 0 22px; }
+
+.karte {
+  background: var(--karte);
+  border: 2px solid var(--rand);
+  border-radius: var(--radius);
+  box-shadow: var(--schatten);
+  padding: 18px;
+}
+
+button, .knopf {
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-klein);
+  border: 2px solid var(--rand);
+  background: var(--karte);
+  color: var(--tinte);
+  padding: 10px 16px;
+}
+button:hover:not(:disabled) { border-color: var(--honig-dunkel); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+button.haupt {
+  background: var(--honig);
+  border-color: var(--honig-dunkel);
+  box-shadow: 0 3px 0 var(--honig-dunkel);
+}
+button.haupt:hover:not(:disabled) { background: var(--honig-dunkel); }
+button.gross { padding: 14px 26px; font-size: 19px; }
+button.leise { background: none; border-color: transparent; color: var(--tinte-leise); font-weight: 600; }
+button.leise:hover { color: var(--tinte); }
+button.gefahr { color: var(--rot); border-color: var(--rot-hell); }
+
+input[type="text"], input[type="password"], textarea, select {
+  font: inherit;
+  width: 100%;
+  padding: 11px 14px;
+  border: 2px solid var(--rand);
+  border-radius: var(--radius-klein);
+  background: #fff;
+  color: var(--tinte);
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--honig-dunkel); }
+label { display: block; font-weight: 700; margin-bottom: 6px; }
+.feld { margin-bottom: 16px; }
+.hinweis { color: var(--tinte-leise); font-size: 15px; margin-top: 6px; }
+
+/* ---------- Meldungen ---------- */
+.meldung-platz:empty { display: none; }
+.meldung {
+  max-width: 900px;
+  margin: 14px auto 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-klein);
+  border: 2px solid;
+  font-weight: 600;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.meldung.fehler { background: var(--rot-hell); border-color: var(--rot); color: var(--rot); }
+.meldung.gut    { background: var(--gruen-hell); border-color: var(--gruen); color: var(--gruen); }
+.meldung.info   { background: var(--blau-hell); border-color: var(--blau); color: var(--blau); }
+.meldung button { margin-left: auto; padding: 4px 10px; }
+
+/* ---------- Uebersicht: Bereichskarten ---------- */
+.bereich-gitter {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.bereich {
+  background: var(--karte);
+  border: 2px solid var(--rand);
+  border-radius: var(--radius);
+  box-shadow: var(--schatten);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bereich.geschafft { border-color: var(--honig); }
+
+.bereich-kopf { display: flex; align-items: flex-start; gap: 12px; }
+.bereich-biene { width: 52px; height: 52px; flex: none; }
+.bereich-biene svg { width: 100%; height: 100%; display: block; }
+.bereich-name { font-size: 19px; font-weight: 800; margin: 0; }
+.bereich-zahl { color: var(--tinte-leise); font-size: 15px; }
+
+/* Pfeile zum Umsortieren der Bereiche -- klein und leise, sie sind nicht der Hauptweg. */
+.bereich-sortieren { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.bereich-sortieren button {
+  width: 28px; height: 24px; padding: 0;
+  font-size: 13px; line-height: 1;
+  background: var(--karte); color: var(--tinte-leise);
+}
+.bereich-sortieren button:disabled { opacity: .3; }
+
+.sterne { display: inline-flex; gap: 2px; align-items: center; margin-top: 4px; }
+.sterne svg { display: block; filter: drop-shadow(0 1px 0 rgba(59,47,47,.15)); }
+
+.belohnung-zeile {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 0; border-bottom: 1px solid var(--rand);
+}
+.belohnung-zeile:last-child { border-bottom: none; }
+.belohnung-biene { width: 44px; height: 44px; flex: none; }
+.belohnung-biene svg { width: 100%; height: 100%; display: block; }
+.belohnung-name { font-weight: 800; }
+.belohnung-text { color: var(--tinte-leise); font-weight: 700; margin-left: auto; }
+
+.balken { height: 12px; border-radius: 999px; background: var(--rand); overflow: hidden; }
+.balken span { display: block; height: 100%; border-radius: 999px; }
+.balken-text { font-size: 14px; color: var(--tinte-leise); display: flex; justify-content: space-between; }
+
+.bereich-aktionen { display: flex; gap: 8px; margin-top: auto; }
+.bereich-aktionen button { flex: 1; padding: 8px 10px; font-size: 15px; }
+
+.auswahl-marke {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; cursor: pointer; user-select: none;
+}
+.auswahl-marke input { width: 20px; height: 20px; accent-color: var(--honig-dunkel); }
+
+/* ---------- Abfrage ---------- */
+.abfrage { text-align: center; }
+.abfrage-biene { width: 160px; height: 160px; margin: 0 auto 8px; }
+.abfrage-biene svg { width: 100%; height: 100%; display: block; }
+
+.fortschritt-zeile {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--tinte-leise); font-weight: 700; font-size: 15px; margin-bottom: 14px;
+}
+.runde-marke {
+  background: var(--honig-hell); color: var(--tinte);
+  padding: 3px 12px; border-radius: 999px; border: 2px solid var(--honig);
+}
+
+.frage-karte { padding: 26px 20px; }
+.frage-richtung { color: var(--tinte-leise); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .06em; }
+.frage-wort { font-size: 34px; font-weight: 800; margin: 6px 0 4px; line-height: 1.2; }
+.frage-wort.satz { font-size: 26px; }
+.frage-hinweis { color: var(--tinte-leise); font-size: 15px; }
+
+.antwort-zeile { display: flex; gap: 10px; margin-top: 20px; }
+.antwort-zeile input { font-size: 20px; text-align: center; }
+
+.rueckmeldung { margin-top: 18px; padding: 16px; border-radius: var(--radius-klein); border: 2px solid; text-align: left; }
+.rueckmeldung.richtig { background: var(--gruen-hell); border-color: var(--gruen); }
+.rueckmeldung.falsch  { background: var(--rot-hell);  border-color: var(--rot); }
+.rueckmeldung .titel { font-weight: 800; font-size: 20px; margin-bottom: 6px; }
+.rueckmeldung .zeile { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.rueckmeldung .etikett { color: var(--tinte-leise); font-size: 15px; min-width: 92px; }
+.rueckmeldung .wert { font-weight: 700; }
+.rueckmeldung .wert.durch { text-decoration: line-through; color: var(--rot); }
+
+.ton-knopf { border-radius: 999px; padding: 8px 14px; }
+
+/* ---------- Tabellen / Listen ---------- */
+.liste { list-style: none; padding: 0; margin: 0; }
+.liste li {
+  display: flex; gap: 12px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--rand);
+}
+.liste li:last-child { border-bottom: none; }
+.liste .de { flex: 1; font-weight: 700; }
+.liste .en { flex: 1; color: var(--blau); font-weight: 700; }
+.liste .zahl { color: var(--tinte-leise); font-size: 15px; }
+
+.marke-chip {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  background: var(--honig-hell); border: 1px solid var(--honig);
+  font-size: 14px; font-weight: 700;
+}
+
+.leer {
+  text-align: center; padding: 40px 20px; color: var(--tinte-leise);
+}
+.leer .leer-biene { width: 110px; height: 110px; margin: 0 auto 12px; }
+.leer .leer-biene svg { width: 100%; height: 100%; display: block; }
+
+.reihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.reihe-ende { margin-left: auto; }
+.abstand { margin-top: 18px; }
+
+.roh-antwort {
+  white-space: pre-wrap; word-break: break-word;
+  background: var(--honig-hell); border: 2px solid var(--rand);
+  border-radius: var(--radius-klein); padding: 12px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 14px;
+  max-height: 240px; overflow: auto;
+}
+
+/* ---------- Ablage fuer Bilder (Zwischenablage, Drag & Drop, Datei) ---------- */
+.ablage {
+  border: 3px dashed var(--honig);
+  border-radius: var(--radius);
+  background: var(--honig-hell);
+  padding: 22px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.ablage:hover, .ablage:focus-visible { background: #FFE9A8; outline: none; }
+.ablage-drueber { background: #FFE9A8; border-color: var(--honig-dunkel); }
+.ablage-aus { opacity: .5; cursor: not-allowed; }
+.ablage-biene { width: 64px; height: 64px; margin: 0 auto 6px; }
+.ablage-biene svg { width: 100%; height: 100%; display: block; }
+.ablage-text { margin: 0 0 4px; font-size: 18px; }
+.ablage .leise { padding: 2px 6px; text-decoration: underline; }
+
+.vorlagen {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.vorlage {
+  position: relative;
+  margin: 0;
+  border: 2px solid var(--rand);
+  border-radius: var(--radius-klein);
+  overflow: hidden;
+  background: #fff;
+}
+.vorlage img { display: block; width: 100%; height: 100px; object-fit: cover; }
+.vorlage-pdf {
+  height: 100px; display: flex; align-items: center; justify-content: center;
+  background: var(--honig-hell); font-weight: 800; color: var(--tinte-leise);
+}
+.vorlage figcaption {
+  padding: 6px 8px; font-size: 13px; color: var(--tinte-leise);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vorlage button {
+  position: absolute; top: 4px; right: 4px;
+  padding: 2px 9px; border-radius: 999px;
+  background: #fff; border-color: var(--rot);
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--honig-hell);
+  border-color: var(--honig);
+}
+.chip:hover:not(:disabled) { background: var(--honig); }
+
+textarea { resize: vertical; min-height: 60px; }
+
+/* ---------- Import-Pruefansicht ---------- */
+.paar-zeile {
+  display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px;
+  align-items: center; margin-bottom: 8px;
+}
+.paar-zeile input { padding: 8px 10px; }
+.paar-doppelt input { opacity: .5; background: var(--honig-hell); }
+.paar-zeile button { padding: 8px 12px; }
+
+/* ---------- Handy ----------
+   Abgestimmt am 12.09.2026: lieber weniger auf dem Schirm als alles gequetscht.
+   Die Regeln hier nehmen Dinge weg, statt sie zu verkleinern. */
+@media (max-width: 620px) {
+  .inhalt { padding: 18px 14px 70px; }
+
+  /* Kopfzeile auf eine Zeile: der Schriftzug weicht, die Biene bleibt als Heimweg.
+     Sonst steht die Navigation umgebrochen und frisst ein Sechstel des Bildschirms -
+     beim Tippen mit offener Tastatur ist das der ganze Platz. */
+  .kopf { gap: 10px; padding: 8px 12px; }
+  .marke-text { display: none; }
+  .marke-biene { width: 34px; height: 34px; }
+  .nav { gap: 6px; flex-wrap: nowrap; }
+  .nav button { padding: 8px 12px; font-size: 15px; }
+
+  /* Daumengerecht: alles Antippbare mindestens 44 px hoch (Android-Richtwert). */
+  button, .knopf { min-height: 44px; }
+  /* Die Sortierpfeile brauchen als Daumenziel 44 px. Nebeneinander neben dem Namen
+     waeren das 94 px weniger Platz, der Bereichsname bricht dann dreizeilig um -
+     deshalb ruecken sie am Handy in eine eigene Zeile unter den Namen. */
+  .bereich-kopf { flex-wrap: wrap; }
+  .bereich-sortieren { flex-direction: row; gap: 8px; order: 3; flex: 1 1 100%; justify-content: flex-end; }
+  .bereich-sortieren button { width: 44px; height: 44px; font-size: 15px; }
+  .auswahl-marke input { width: 24px; height: 24px; }
+
+  /* Knoepfe, die am PC nebeneinander passen, hier ueber die volle Breite. */
+  .bereich-gitter { grid-template-columns: 1fr; }
+  .reihe > button.gross { flex: 1 1 100%; }
+  .reihe-ende { margin-left: 0; }
+
+  /* Die beiden Auswahl-Knoepfe teilen sich eine Zeile, die Zahl steht darunter.
+     Ohne das bricht "Auswahl leeren" um und der erste Knopf steht allein da. */
+  .reihe-auswahl > button { flex: 1 1 0; min-width: 0; padding: 10px 8px; }
+  /* Die Zahl als schlichter Text: als gelbe Pille ueber die volle Breite sieht sie
+     aus wie ein Knopf, den man druecken soll. */
+  .reihe-auswahl > .marke-chip {
+    flex: 1 1 100%; text-align: right; padding: 0;
+    background: none; border: none; color: var(--tinte-leise);
+  }
+
+  h1 { font-size: 24px; }
+  .frage-wort { font-size: 28px; }
+  .frage-wort.satz { font-size: 22px; }
+
+  /* Antwortfeld unter die Frage statt daneben - nebeneinander bleiben von 375 px
+     Breite keine 200 px fuers Tippen uebrig. */
+  .antwort-zeile { flex-direction: column; }
+  .antwort-zeile button { width: 100%; }
+
+  /* Schwerste Woerter: der Bereichsname faellt weg (er steht schon auf der Karte
+     darueber) und Deutsch/Englisch stehen untereinander. Vierspaltig bricht auf dem
+     Handy mitten im Wort um. */
+  .liste li { flex-wrap: wrap; gap: 4px 10px; }
+  .liste .de { flex: 1 1 100%; }
+  .liste .en { flex: 1 1 auto; }
+  .liste .bereich-spalte { display: none; }
+
+  /* Eintipp-Zeile: Deutsch und Englisch untereinander, Loeschknopf daneben. */
+  .paar-zeile { grid-template-columns: 1fr auto; }
+  .paar-zeile input:first-child { grid-column: 1 / -1; }
+
+  .vorlagen { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+
+/* Offene Tastatur: dann bleiben vom Bildschirm keine 400 px. Die Biene schrumpft,
+   damit Frage und Eingabefeld sichtbar bleiben, statt nach oben wegzurutschen.
+   Beim Tippen ist sie ohnehin nur Zierde - in der Rueckmeldung, wo sie sich freut oder
+   die Schnute zieht, ist die Tastatur zu und der Bildschirm wieder hoch. */
+@media (max-height: 560px) {
+  .abfrage-biene { width: 84px; height: 84px; margin-bottom: 0; }
+  .kopf { position: static; }
+  .frage-karte { padding: 16px 14px; }
+  .inhalt { padding-top: 12px; }
+}
+
+@media (max-height: 430px) {
+  .abfrage-biene { display: none; }
+  .frage-wort { font-size: 24px; margin: 2px 0; }
+}
+
+/* ---------- Animationen ---------- */
+@keyframes wippen {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-6px) rotate(-3deg); }
+  75%      { transform: translateY(-3px) rotate(3deg); }
+}
+.wippt { animation: wippen .7s ease-in-out; }
+
+@keyframes zittern {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-7px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(3px); }
+}
+.zittert { animation: zittern .45s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wippt, .zittert { animation: none; }
+}
