@@ -18,7 +18,7 @@ import {
   bereichNachName,
   bereichZuruecksetzen
 } from '../state.js';
-import { esc, aufKlick } from '../dom.js';
+import { esc, aufKlick, nurFinger } from '../dom.js';
 import { biene, sterneMarkup } from '../bee.js';
 import { dublettenSchluessel } from '../check.js';
 import { vokabelnAusDateien, vokabelnAusBeschreibung } from '../anthropic.js';
@@ -89,11 +89,6 @@ document.addEventListener('paste', (e) => {
 
 // Am Handy gibt es weder Strg+V noch Ziehen und Ablegen. Statt beides grau danebenstehen
 // zu lassen, steht dort nur der eine Weg, der funktioniert: Kamera bzw. Galerie.
-// `hover: none` trifft Geraete, die nur mit dem Finger bedient werden.
-function nurFinger() {
-  return window.matchMedia && window.matchMedia('(hover: none)').matches;
-}
-
 function ablageBlock(aus) {
   const finger = nurFinger();
   return `

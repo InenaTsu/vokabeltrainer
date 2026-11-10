@@ -8,7 +8,8 @@ import {
   laden,
   uebungenZuruecksetzen,
   doppelteBereiche,
-  bereicheZusammenfuehren
+  bereicheZusammenfuehren,
+  sicherungZusammenfuehren
 } from '../state.js';
 import { esc, aufKlick } from '../dom.js';
 import { stimmenFuer, vorlesen } from '../speech.js';
@@ -113,17 +114,27 @@ export function render(wurzel) {
       <p class="hinweis" style="margin-top:0">
         Alle Vokabeln liegen nur auf diesem Gerät. Jedes Gerät hat seinen eigenen Bestand -
         so kommen neue Vokabeln vom Computer aufs Handy: hier herunterladen, die Datei
-        aufs andere Gerät bringen und dort einspielen.
-      </p>
-      <p class="hinweis">
-        <strong>Einspielen ersetzt alles</strong>, was auf dem Gerät schon da ist - auch
-        Sterne und Fortschritt.
+        aufs andere Gerät bringen und dort hinzufügen.
       </p>
       <div class="reihe">
         <button type="button" data-export>Sicherung herunterladen</button>
-        <input type="file" id="sicherung" accept="application/json" style="width:auto">
-        <button type="button" data-import>Sicherung einspielen</button>
       </div>
+
+      <div class="feld abstand">
+        <label for="sicherung">Sicherungsdatei von einem anderen Gerät</label>
+        <input type="file" id="sicherung" accept="application/json">
+      </div>
+
+      <div class="reihe">
+        <button type="button" class="haupt" data-vereinen>Vokabeln hinzufügen</button>
+        <button type="button" class="gefahr" data-import>Alles ersetzen</button>
+      </div>
+      <p class="hinweis">
+        <strong>Vokabeln hinzufügen</strong> ist der normale Weg: Neues kommt dazu, alles
+        Vorhandene bleibt, und Sterne und Fortschritt gehen nicht verloren.
+        <strong>Alles ersetzen</strong> löscht vorher den ganzen Bestand dieses Geräts -
+        nur sinnvoll, wenn ein Gerät neu aufgesetzt wurde.
+      </p>
     </div>
   `;
 
@@ -187,10 +198,27 @@ export function render(wurzel) {
     }
   });
 
+  aufKlick(wurzel, '[data-vereinen]', async () => {
+    const datei = wurzel.querySelector('#sicherung').files[0];
+    if (!datei) return melden('info', 'Bitte zuerst eine Sicherungsdatei auswählen.');
+    try {
+      const b = await sicherungZusammenfuehren(await datei.text());
+      const teile = [];
+      if (b.neueVokabeln > 0) teile.push(anzahl(b.neueVokabeln, 'neue Vokabel', 'neue Vokabeln'));
+      if (b.neueBereiche > 0) teile.push(anzahl(b.neueBereiche, 'neuer Bereich', 'neue Bereiche'));
+      if (b.schonDa > 0) teile.push(b.schonDa === 1 ? '1 war schon da' : `${b.schonDa} waren schon da`);
+      melden('gut', teile.length > 0 ? 'Hinzugefügt: ' + teile.join(', ') + '.' : 'Es gab nichts Neues.');
+    } catch (fehler) {
+      if (fehler?.sanft) melden('info', fehler.message);
+      else melden('fehler', 'Die Datei konnte nicht gelesen werden: ' + (fehler?.message || fehler));
+    }
+    notify();
+  });
+
   aufKlick(wurzel, '[data-import]', async () => {
     const datei = wurzel.querySelector('#sicherung').files[0];
     if (!datei) return melden('info', 'Bitte zuerst eine Sicherungsdatei auswählen.');
-    if (!confirm('Die vorhandenen Vokabeln werden dabei ersetzt. Fortfahren?')) return;
+    if (!confirm('Alle Vokabeln, Sterne und der Fortschritt auf diesem Gerät werden gelöscht und durch die Datei ersetzt. Fortfahren?')) return;
     try {
       await importieren(await datei.text());
       await laden();

@@ -9,7 +9,7 @@ export const state = {
   vokabeln: [],
   fortschritt: {},
   bereichStatus: {},
-  settings: { apiKey: '', stimme: '', modell: 'claude-opus-5' },
+  settings: { apiKey: '', stimme: '', modell: 'claude-opus-5', vereinteSicherungen: [] },
 
   // Reine Oberflaechen-Zustaende (werden nicht gespeichert)
   ansicht: 'uebersicht', // uebersicht | abfrage | verwalten | einstellungen
@@ -151,15 +151,20 @@ export function doppelteBereiche() {
 }
 
 /** Zaehlt den Fortschritt einer wegfallenden Vokabel auf die bleibende drauf. */
-function fortschrittZusammenlegen(vonId, nachId) {
-  const von = state.fortschritt[vonId];
-  if (!von) return;
-  const nach = state.fortschritt[nachId] || { richtig: 0, falsch: 0, letzteAbfrage: null };
-  state.fortschritt[nachId] = {
-    richtig: nach.richtig + von.richtig,
-    falsch: nach.falsch + von.falsch,
-    letzteAbfrage: [nach.letzteAbfrage, von.letzteAbfrage].filter(Boolean).sort().pop() || null
+/** Rechnet einen fremden Fortschritt auf eine Vokabel drauf. Treffer und Fehler addieren. */
+function fortschrittDazu(zielId, fremd) {
+  if (!fremd) return;
+  const da = state.fortschritt[zielId] || { richtig: 0, falsch: 0, letzteAbfrage: null };
+  state.fortschritt[zielId] = {
+    richtig: (da.richtig || 0) + (fremd.richtig || 0),
+    falsch: (da.falsch || 0) + (fremd.falsch || 0),
+    letzteAbfrage: [da.letzteAbfrage, fremd.letzteAbfrage].filter(Boolean).sort().pop() || null
   };
+}
+
+function fortschrittZusammenlegen(vonId, nachId) {
+  if (!state.fortschritt[vonId]) return;
+  fortschrittDazu(nachId, state.fortschritt[vonId]);
   delete state.fortschritt[vonId];
 }
 
@@ -168,19 +173,22 @@ function fortschrittZusammenlegen(vonId, nachId) {
  * Die Zaehler werden NICHT addiert: jeder Durchlauf galt nur der Haelfte der Vokabeln,
  * zusammengezaehlt waeren es erfundene Erfolge. Es gilt der bessere der beiden Staende.
  */
-function statusZusammenlegen(hauptId, altId) {
-  const alt = state.bereichStatus[altId];
-  if (!alt) return;
-  const haupt = state.bereichStatus[hauptId] || {};
-  const daten = [haupt.geschafftAm, alt.geschafftAm].filter(Boolean).sort();
-  const letzte = [haupt.letzterErfolg, alt.letzterErfolg].filter(Boolean).sort();
-  state.bereichStatus[hauptId] = {
-    geschafft: Boolean(haupt.geschafft || alt.geschafft),
+function statusDazu(zielId, fremd) {
+  if (!fremd) return;
+  const da = state.bereichStatus[zielId] || {};
+  const daten = [da.geschafftAm, fremd.geschafftAm].filter(Boolean).sort();
+  const letzte = [da.letzterErfolg, fremd.letzterErfolg].filter(Boolean).sort();
+  state.bereichStatus[zielId] = {
+    geschafft: Boolean(da.geschafft || fremd.geschafft),
     geschafftAm: daten[0] || null,
-    erfolge: Math.max(haupt.erfolge ?? (haupt.geschafft ? 1 : 0), alt.erfolge ?? (alt.geschafft ? 1 : 0)),
-    perfekt: Math.max(haupt.perfekt ?? 0, alt.perfekt ?? 0),
+    erfolge: Math.max(da.erfolge ?? (da.geschafft ? 1 : 0), fremd.erfolge ?? (fremd.geschafft ? 1 : 0)),
+    perfekt: Math.max(da.perfekt ?? 0, fremd.perfekt ?? 0),
     letzterErfolg: letzte[letzte.length - 1] || null
   };
+}
+
+function statusZusammenlegen(hauptId, altId) {
+  statusDazu(hauptId, state.bereichStatus[altId]);
 }
 
 /**
@@ -239,6 +247,128 @@ export async function bereicheZusammenfuehren() {
   });
   notify();
   return { gruppen: gruppen.length, entfernt: wegBereiche.size, verschoben, doppelt: wegVokabeln.size };
+}
+
+/**
+ * Spielt eine Sicherungsdatei ein, OHNE den Bestand des Geraets zu loeschen.
+ * Gegenstueck zu importieren() in js/storage.js, das alles ersetzt.
+ * Regeln siehe Abschnitt 8 der Spezifikation:
+ *
+ * - Bereiche werden ueber den Namen zugeordnet (ohne Gross-/Kleinschreibung und
+ *   Randleerzeichen, wie bereichNachName). Unbekannte haengen hinten an.
+ * - Vokabeln ueber dublettenSchluessel() der englischen Seite, wie beim Import. Es gilt
+ *   der Eintrag, der schon auf dem Geraet liegt -- dessen Schreibweise bleibt.
+ * - Fortschritt: richtig und falsch werden addiert.
+ * - erfolge und perfekt: das Maximum, NICHT die Summe. Gleiche Begruendung wie bei
+ *   statusDazu -- jeder Durchlauf galt nur einem Teil der Vokabeln, eine Summe waeren
+ *   erfundene Erfolge. Die Sterne auf dem Geraet koennen dadurch nie weniger werden.
+ * - Der API-Schluessel wird nie uebernommen; die Sicherung enthaelt bewusst keinen.
+ *
+ * Dieselbe Datei ein zweites Mal hinzuzufuegen wird abgelehnt. Vokabeln wuerden zwar nicht
+ * doppelt entstehen, aber Treffer und Fehler ein zweites Mal addiert -- die Fehlerzahl auf
+ * der Bereichskarte waere dann erfunden. Gemerkt wird der Zeitstempel `exportiert` aus der
+ * Datei (siehe exportieren() in js/storage.js).
+ */
+export async function sicherungZusammenfuehren(jsonText) {
+  const fremd = JSON.parse(jsonText);
+  const fremdBereiche = Array.isArray(fremd?.bereiche) ? fremd.bereiche : [];
+  const fremdVokabeln = Array.isArray(fremd?.vokabeln) ? fremd.vokabeln : [];
+  const fremdFortschritt = fremd?.fortschritt || {};
+  const fremdStatus = fremd?.bereichStatus || {};
+
+  if (fremdBereiche.length === 0 && fremdVokabeln.length === 0) {
+    throw new Error('In dieser Datei stehen keine Vokabeln.');
+  }
+
+  const stempel = String(fremd?.exportiert ?? '');
+  const schonVereint = state.settings.vereinteSicherungen || [];
+  if (stempel && schonVereint.includes(stempel)) {
+    // Kein Fehler, sondern ein harmloser Hinweis - die Ansicht zeigt ihn ohne rote Schrift.
+    const hinweis = new Error('Diese Sicherung wurde hier schon hinzugefügt - es ändert sich nichts.');
+    hinweis.sanft = true;
+    throw hinweis;
+  }
+
+  const bilanz = { neueBereiche: 0, neueVokabeln: 0, schonDa: 0 };
+  const zuordnung = new Map(); // Bereichs-Id aus der Datei -> Id auf diesem Geraet
+
+  for (const fb of fremdBereiche) {
+    const name = String(fb?.name ?? '').trim();
+    if (!name || fb?.id === undefined) continue;
+    const vorhanden = bereichNachName(name);
+    if (vorhanden) {
+      zuordnung.set(fb.id, vorhanden.id);
+      continue;
+    }
+    const neu = {
+      id: id(),
+      name,
+      erstellt: fb.erstellt || new Date().toISOString(),
+      quelle: fb.quelle || 'manuell'
+    };
+    state.bereiche.push(neu);
+    zuordnung.set(fb.id, neu.id);
+    bilanz.neueBereiche += 1;
+  }
+
+  // Je Zielbereich einmal nachsehen, was dort schon liegt.
+  const bekannt = new Map();
+  const bekannteVon = (bereichId) => {
+    if (!bekannt.has(bereichId)) {
+      const karte = new Map();
+      for (const v of vokabelnVonBereich(bereichId)) {
+        const schluessel = dublettenSchluessel(v.en);
+        if (!karte.has(schluessel)) karte.set(schluessel, v);
+      }
+      bekannt.set(bereichId, karte);
+    }
+    return bekannt.get(bereichId);
+  };
+
+  for (const fv of fremdVokabeln) {
+    const zielBereich = zuordnung.get(fv?.bereichId);
+    if (!zielBereich) continue; // Vokabel ohne Bereich in der Datei
+    const de = String(fv?.de ?? '').trim();
+    const en = String(fv?.en ?? '').trim();
+    if (!de || !en) continue;
+
+    const karte = bekannteVon(zielBereich);
+    const schluessel = dublettenSchluessel(en);
+    const vorhanden = karte.get(schluessel);
+
+    if (vorhanden) {
+      fortschrittDazu(vorhanden.id, fremdFortschritt[fv.id]);
+      bilanz.schonDa += 1;
+    } else {
+      const neu = {
+        id: id(),
+        bereichId: zielBereich,
+        de,
+        en,
+        typ: fv?.typ === 'satz' ? 'satz' : 'wort',
+        hinweis: fv?.hinweis ?? null
+      };
+      state.vokabeln.push(neu);
+      karte.set(schluessel, neu);
+      fortschrittDazu(neu.id, fremdFortschritt[fv.id]);
+      bilanz.neueVokabeln += 1;
+    }
+  }
+
+  for (const [fremdId, zielId] of zuordnung) statusDazu(zielId, fremdStatus[fremdId]);
+
+  // Nur die letzten 20 merken - die Liste soll nicht unbegrenzt wachsen.
+  if (stempel) state.settings.vereinteSicherungen = [...schonVereint, stempel].slice(-20);
+
+  await sichern({
+    bereiche: state.bereiche,
+    vokabeln: state.vokabeln,
+    fortschritt: state.fortschritt,
+    bereichStatus: state.bereichStatus,
+    settings: state.settings
+  });
+  notify();
+  return bilanz;
 }
 
 /* ---------- Vokabeln ---------- */

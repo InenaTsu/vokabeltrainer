@@ -115,7 +115,7 @@ button.leise { background: none; border-color: transparent; color: var(--tinte-l
 button.leise:hover { color: var(--tinte); }
 button.gefahr { color: var(--rot); border-color: var(--rot-hell); }
 
-input[type="text"], input[type="password"], textarea, select {
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
   font: inherit;
   width: 100%;
   padding: 11px 14px;

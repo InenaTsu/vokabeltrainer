@@ -12,7 +12,7 @@ import {
   bereichName
 } from '../state.js';
 import { biene, sterneMarkup, belohnung } from '../bee.js';
-import { esc, aufKlick } from '../dom.js';
+import { esc, aufKlick, nurFinger } from '../dom.js';
 import { sitzungStarten, aktuelleFrage, antworten, weiter, fortschritt, abschluss } from '../trainer.js';
 import { vorlesen, kannVorlesen } from '../speech.js';
 
@@ -63,6 +63,15 @@ function frageAnsicht(wurzel, sitzung) {
     return notify();
   }
 
+  // Am Handy gibt sich das Antwortfeld als E-Mail-Feld aus (Abschnitt 11 der Spezifikation).
+  // Android-Tastaturen uebergehen autocorrect="off" und spellcheck="false" oft, schalten
+  // Korrektur und Vorschlaege bei E-Mail-Feldern aber von selbst ab. Ein E-Mail-Feld laesst
+  // Leerzeichen, Umlaute und Satzzeichen unveraendert und schneidet nur den Rand ab - wie
+  // check.js. `novalidate` am Formular, sonst verlangt der Browser beim Pruefen ein "@".
+  // Am PC bleibt es ein Textfeld: dort gibt es das Problem nicht, und Chrome wuerde
+  // gespeicherte E-Mail-Adressen vorschlagen.
+  const feldTyp = nurFinger() ? 'email' : 'text';
+
   wurzel.innerHTML = `
     <div class="abfrage">
       ${kopfzeile(sitzung)}
@@ -78,8 +87,8 @@ function frageAnsicht(wurzel, sitzung) {
           ${tonKnopf(frage.frage, frage.frageSprache)}
         </div>
 
-        <form class="antwort-zeile" data-form>
-          <input type="text" id="antwort" autocomplete="off" autocapitalize="off"
+        <form class="antwort-zeile" data-form novalidate>
+          <input type="${feldTyp}" id="antwort" autocomplete="off" autocapitalize="off"
                  autocorrect="off" spellcheck="false" placeholder="Deine Antwort"
                  aria-label="Deine Antwort">
           <button type="submit" class="haupt">Prüfen</button>

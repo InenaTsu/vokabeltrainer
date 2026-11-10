@@ -55,7 +55,9 @@ const LEER = {
   vokabeln: [],
   fortschritt: {},
   bereichStatus: {},
-  settings: { apiKey: '', stimme: '', modell: 'claude-opus-5' }
+  // vereinteSicherungen: Zeitstempel der Sicherungen, die hier schon hinzugefuegt wurden.
+  // Verhindert, dass dieselbe Datei zweimal zaehlt (sicherungZusammenfuehren in state.js).
+  settings: { apiKey: '', stimme: '', modell: 'claude-opus-5', vereinteSicherungen: [] }
 };
 
 /** Laedt den gesamten Bestand. Bei Problemen wird ein leerer Bestand geliefert. */
